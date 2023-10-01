@@ -20,9 +20,9 @@ def get_kernel(kernel_size, alpha):
     kernel[kernel < 0] = 0
     return kernel
 
-img_path = r'E:\CellCounting\multiclass_dataset\MoNuSAC\MoNuSAC_Test\svs'
-xml_path = r'E:\CellCounting\multiclass_dataset\MoNuSAC\MoNuSAC_Test\xml'
-save_path = r'E:\CellCounting\multiclass_dataset\MoNuSAC\MoNuSAC_Test\visual'
+img_path = r'E:\CellCounting\multiclass_dataset\MoNuSAC\MoNuSAC_train\svs'
+xml_path = r'E:\CellCounting\multiclass_dataset\MoNuSAC\MoNuSAC_train\xml'
+save_path = r'E:\CellCounting\multiclass_dataset\MoNuSAC\MoNuSAC_train\visual2'
 image_list = os.listdir(img_path)
 kernel_size = 15
 alpha = 5
@@ -30,10 +30,6 @@ kernel = get_kernel(kernel_size, alpha)
 kernel_size = int((kernel.shape[0]-1)/2)
 for image_name in image_list:
     name, suffix = os.path.splitext(image_name)
-    patient_path = os.path.join(save_path, name)
-    if not os.path.exists(patient_path):
-        os.makedirs(patient_path)
-
     image = openslide.OpenSlide(os.path.join(img_path, image_name))
     image_size = image.level_dimensions[0]
     image = np.array(image.read_region((0, 0), 0, image.level_dimensions[0]))
@@ -61,5 +57,4 @@ for image_name in image_list:
         sub_label = np.clip(sub_label, 0, 1)
         sub_label = 255*np.float32(sub_label[kernel_size:sub_label.shape[0]-kernel_size, kernel_size:sub_label.shape[1]-kernel_size])
         sub_label = cv2.cvtColor(sub_label, cv2.COLOR_GRAY2BGR)
-        visual = cv2.addWeighted(sub_label, 0.5, image, 0.5, 0)
-        cv2.imwrite(os.path.join(patient_path, label+'.jpg'), visual)
+        cv2.imwrite(os.path.join(save_path, name+'_'+label+'.jpg'), sub_label)

@@ -23,6 +23,9 @@ class CountingModel(nn.Module):
         self.outc3 = OutBlock(mid_channels)
         self.outc4 = OutBlock(mid_channels)
 
+        self.up8 = UpBlock8(8*mid_channels, mid_channels)
+        self.up4 = UpBlock4(4*mid_channels, mid_channels)
+
         self.NonLocalBlock = NonLocalBlock(256)# 原文没有
 
     def forward(self, x):
@@ -35,9 +38,21 @@ class CountingModel(nn.Module):
         y2 = self.res_block_exp2(y1, x3)
         y3 = self.res_block_exp3(y2, x2)
         y4 = self.res_block_exp4(y3, x1)
-        out1 = self.outc1(y4)
-        out2 = self.outc2(y4)
-        out3 = self.outc3(y4)
-        out4 = self.outc4(y4)
+
+        y18 = self.up8(y1)
+        y24 = self.up4(y2)
+        y = torch.cat((y4, y18, y24), 1)
+
+        out1 = self.outc1(y)
+        out2 = self.outc2(y)
+        out3 = self.outc3(y)
+        out4 = self.outc4(y)
         return [out1, out2, out3, out4]
 
+
+
+if __name__ == '__main__':
+    net = CountingModel(3, 32)
+    input = torch.zeros((1, 3, 512, 512))
+    out = net(input)
+    print()

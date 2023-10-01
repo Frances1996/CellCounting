@@ -8,7 +8,7 @@ class SingleBlock(nn.Module):
         self.singleblock = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ELU(inplace=True)
         )
     def forward(self, x):
         return self.singleblock(x)
@@ -20,7 +20,7 @@ class DownBlock(nn.Module):
         self.downblock = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ELU(inplace=True)
         )
     def forward(self, x):
         return self.downblock(x)
@@ -51,24 +51,24 @@ class ContracBlock(nn.Module):
         x1 = self.downblock(x)
         return x1 + self.doubleblock(x1)
 
-class UpBlock(nn.Module):
+class UpBlock2(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.upblock = nn.Sequential(
+        self.upblock2 = nn.Sequential(
             nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
         )
     def forward(self, x):
-        return self.upblock(x)
+        return self.upblock2(x)
 
 class ExpBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.upblock = UpBlock(in_channels, out_channels)
+        self.upblock2 = UpBlock2(in_channels, out_channels)
         self.singleblock = SingleBlock(out_channels*2, out_channels)
         self.doubleblock = DoubleBlock(out_channels, out_channels)
 
     def forward(self, x1, x2):
-        x = self.upblock(x1)
+        x = self.upblock2(x1)
         x = torch.cat((x, x2), 1)
         x = self.singleblock(x)
         return x + self.doubleblock(x)
@@ -76,15 +76,30 @@ class ExpBlock(nn.Module):
 class OutBlock(nn.Module):
     def __init__(self, in_channels):
         super().__init__()
-        self.outblock = SingleBlock(in_channels, in_channels)
+        self.outblock = SingleBlock(in_channels*3, in_channels)
         self.regblock = nn.Sequential(
             nn.Conv2d(in_channels, 1, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(1),
-            nn.ReLU(inplace=True)
+            nn.ELU(inplace=True)
         )
     def forward(self, x):
         x = self.outblock(x)
         return self.regblock(x)
+
+class UpBlock4(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.upblock4 = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=4, stride=4)
+    def forward(self, x):
+        return self.upblock4(x)
+
+
+class UpBlock8(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.upblock8 = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=8, stride=8)
+    def forward(self, x):
+        return self.upblock8(x)
 
 
 class NonLocalBlock(nn.Module):
@@ -116,3 +131,10 @@ class NonLocalBlock(nn.Module):
         mask = self.conv_mask(mul_theta_phi_g)
         out = mask + x
         return out
+    
+
+if __name__ == '__main__':
+    net = UpBlock4(64, 8)
+    input1 = torch.zeros((1, 64, 32, 32))
+    out = net(input1)
+    print()

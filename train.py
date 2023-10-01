@@ -65,6 +65,7 @@ def train(net, args):
             loss2 = criteria(out[2], label2)
             loss3 = criteria(out[3], label3)
             loss = loss0 + loss1 + loss2 + loss3
+            
             writer.add_scalar('loss0', loss0, iter_idx+(epoch-1)*max_iter)
             writer.add_scalar('loss1', loss1, iter_idx+(epoch-1)*max_iter)
             writer.add_scalar('loss2', loss2, iter_idx+(epoch-1)*max_iter)
